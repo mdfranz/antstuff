@@ -1,0 +1,73 @@
+<project name="sphinxsearch" default="pkg" basedir=".">
+<description>
+</description>
+
+<!-- set global properties for this build -->
+<property name="build" location="build"/>
+<property name="dist" location="dist"/>
+<property name="pkg" location="pkg"/>
+
+<target name="init">
+<!-- Create the time stamp -->
+	<tstamp/>
+        <!-- Create the build directory structure used by compile -->
+	<mkdir dir="${build}"/>
+	<mkdir dir="${dist}"/>
+	<mkdir dir="${pkg}"/>
+</target>
+
+<target name="fetch" depends="init">
+	<exec dir="${build}" executable="svn"> 
+		<arg value="checkout"/>
+		<arg value="http://sphinxsearch.googlecode.com/svn/trunk/"/>
+		<arg value="sphinxsearch-read-only"/>
+	</exec>
+</target>
+
+<target name="compile" depends="fetch" description="compile the source">
+	<exec failonerror="true" dir="${build}/sphinxsearch-read-only" executable="./configure"> 
+		<arg value="--prefix=/opt/sphinx"/>
+	</exec>
+
+	<exec failonerror="true" dir="${build}/sphinxsearch-read-only" executable="make"> 
+		<arg value="DESTDIR=${dist}"/>
+	</exec>
+
+	<exec failonerror="true" dir="${build}/sphinxsearch-read-only" executable="make"> 
+		<arg value="DESTDIR=${dist}"/>
+		<arg value="install"/>
+	</exec>
+
+
+</target>
+
+<target name="dist" depends="compile" description="generate the distribution" >
+<!-- Create the distribution directory -->
+	<exec failonerror="true" dir="${build}/sphinxsearch-read-only" executable="make"> 
+		<arg value="DESTDIR=${dist}"/>
+		<arg value="install"/>
+	</exec>
+</target>
+
+<target name="pkg" depends="dist" description="build RPM using FPM">
+	<exec failonerror="true" dir="${dist}" executable="fpm"> 
+ 		<arg value="--verbose"/>
+ 		<arg value="-n"/>
+ 		<arg value="sphinx"/>
+ 		<arg value="-s"/>
+ 		<arg value="dir"/>
+ 		<arg value="-p"/>
+ 		<arg value="${pkg}"/>
+ 		<arg value="-t"/>
+ 		<arg value="rpm"/>
+ 		<arg value="opt"/>
+	</exec>
+</target>
+
+<target name="clean" description="clean up">
+<!-- Delete the ${build} and ${dist} directory trees -->
+	<delete dir="${build}"/>
+        <delete dir="${dist}"/>
+        <delete dir="${pkg}"/>
+</target>
+</project>
